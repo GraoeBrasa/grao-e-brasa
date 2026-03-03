@@ -1,136 +1,38 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Gestão Grão & Brasa</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8"><title>Caixa – Grão & Brasa</title>
 <style>
-:root{--bg:#0f1117;--bg2:#161b27;--dou:#d4a84b;--car:#c8843a;--vd:#27ae60;--vm:#e74c3c;--az:#3498db;--brd:#2a3045;}
-body{font-family:'Lora',serif;background:var(--bg);color:#dde;padding:20px}
-.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
-.box{background:var(--bg2);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--brd)}
-.btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;color:white;transition:0.3s}
-.card{background:var(--bg2);padding:15px;border-radius:10px;margin-bottom:10px;border-left:5px solid var(--vm)}
-.status-v{padding:10px;border-radius:8px;text-align:center;font-weight:bold;margin-bottom:15px}
-.aberto{background:rgba(39,174,96,0.1);color:var(--vd);border:1px solid var(--vd)}
-.fechado{background:rgba(231,76,60,0.1);color:var(--vm);border:1px solid var(--vm)}
-.tabs{display:flex;margin-bottom:20px;border-bottom:1px solid var(--brd)}
-.tab{padding:15px;cursor:pointer;color:#888}
-.tab.active{color:var(--dou);border-bottom:2px solid var(--car)}
+    body{font-family:sans-serif;background:#0f1117;color:#dde;padding:20px}
+    .box{background:#161b27;padding:20px;border-radius:12px;text-align:center;margin-bottom:20px}
+    .btn{padding:12px 20px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;color:white;margin:5px}
+    .card{background:#161b27;padding:15px;border-radius:10px;margin-bottom:10px;border-left:5px solid #e74c3c}
 </style>
 </head>
 <body>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <h1 style="font-family:'Playfair Display';color:var(--dou)">💰 Dashboard Gestão</h1>
-    <div id="visor-caixa" class="status-v fechado">CARREGANDO...</div>
-</div>
-
-<div style="display:flex;gap:10px;margin-bottom:25px">
-    <button class="btn" style="background:var(--vd)" onclick="setCaixa(true)">🔓 ABRIR TURNO</button>
-    <button class="btn" style="background:var(--vm)" onclick="setCaixa(false)">🔒 FECHAR TURNO</button>
-</div>
-
-<div class="tabs">
-    <div class="tab active" onclick="show('t-caixa',this)">Caixa</div>
-    <div class="tab" onclick="show('t-graficos',this)">Métricas</div>
-    <div class="tab" onclick="show('t-historico',this)">Histórico</div>
-</div>
-
-<div id="t-caixa">
-    <div class="resumo">
-        <div class="box"><h4>PIX</h4><h2 id="t-pix">R$ 0,00</h2></div>
-        <div class="box"><h4>CARTÃO</h4><h2 id="t-cartao">R$ 0,00</h2></div>
-        <div class="box"><h4>DINHEIRO</h4><h2 id="t-dinheiro">R$ 0,00</h2></div>
-        <div class="box" style="border-color:var(--vd)"><h4>FATURAMENTO</h4><h2 style="color:var(--vd)" id="t-total">R$ 0,00</h2></div>
-    </div>
-    <button class="btn" style="background:var(--az);max-width:300px;margin:0 auto;display:block" onclick="salvar()">💾 SALVAR SESSÃO</button>
-    <h3 style="margin-top:30px;color:var(--dou)">⏳ Pagamentos Pendentes</h3>
-    <div id="lista-p"></div>
-</div>
-
-<div id="t-graficos" style="display:none">
-    <div style="background:var(--bg2);padding:20px;border-radius:15px;margin-bottom:20px"><canvas id="c-hora"></canvas></div>
-    <div style="background:var(--bg2);padding:20px;border-radius:15px;max-width:400px;margin:auto"><canvas id="c-pizza"></canvas></div>
-</div>
-
-<div id="t-historico" style="display:none">
-    <div id="lista-h"></div>
-</div>
-
+<div style="display:flex;justify-content:space-between"><h1>💰 Gestão Brasa</h1><h2 id="st">--</h2></div>
+<button class="btn" style="background:#27ae60" onclick="set(true)">🔓 ABRIR LOJA</button>
+<button class="btn" style="background:#e74c3c" onclick="set(false)">🔒 FECHAR LOJA</button>
+<div class="box"><h3>TOTAL VENDAS: <span id="tot" style="color:#27ae60">R$ 0,00</span></h3></div>
+<h3>⏳ Pagamentos Pendentes</h3>
+<div id="lista"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-const db = getDatabase(initializeApp({databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com"}));
-
-let cfg = {aberto:false, data:null}; let ativos = 0; let totais = {pix:0, cartao:0, dinheiro:0, total:0};
-let chartH, chartP;
-
-onValue(ref(db, 'configuracoes/caixa'), (snap) => {
-    cfg = snap.val() || {aberto:false};
-    const v = document.getElementById('visor-caixa');
-    v.className = "status-v " + (cfg.aberto ? "aberto" : "fechado");
-    v.innerText = cfg.aberto ? "🟢 TURNO ABERTO" : "🔴 TURNO FECHADO";
-});
-
-window.setCaixa = (abrir) => {
-    if(!abrir && ativos > 0) return alert("🛑 Erro: Ainda existem "+ativos+" pedidos pendentes! Finalize todos antes de fechar.");
-    set(ref(db, 'configuracoes/caixa'), {aberto:abrir, data:abrir?new Date().toISOString():null});
-};
-
+import { getDatabase, ref, onValue, update, set as fbSet } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+const db = getDatabase(initializeApp({ databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" }));
+onValue(ref(db, 'configuracoes/caixa'), s => document.getElementById('st').innerText = s.val()?.aberto ? "🟢 ABERTO" : "🔴 FECHADO");
+window.set = (v) => fbSet(ref(db, 'configuracoes/caixa'), {aberto: v});
 onValue(ref(db, 'pedidos'), (snap) => {
-    const list = snap.val() ? Object.keys(snap.val()).map(k=>({id:k,...snap.val()[k]})) : [];
-    const sessao = list.filter(p => cfg.aberto && p.hora && new Date(p.hora) >= new Date(cfg.data));
-    ativos = sessao.filter(p => p.status !== 'finalizado' && p.status !== 'cancelado').length;
-    
-    totais = {pix:0, cartao:0, dinheiro:0, total:0};
-    let hData = Array(24).fill(0);
-    document.getElementById('lista-p').innerHTML = '';
-    
-    sessao.forEach(p => {
-        if(p.status==='aguardando_pagamento') {
-            document.getElementById('lista-p').innerHTML += `<div class="card">
-                <b>${p.mesa.replace('_',' ')} - R$ ${p.total.toFixed(2)}</b><br><small>${p.cliente} | Pag: ${p.metodoPag.toUpperCase()}</small>
-                <button class="btn" style="background:var(--vd);margin-top:10px" onclick="upd('${p.id}','novo')">Confirmar Recebimento</button>
-            </div>`;
-        } else if(p.status!=='cancelado') {
-            totais.total += p.total; totais[p.metodoPag] += p.total;
-            hData[new Date(p.hora).getHours()] += p.total;
-        }
+    const l = document.getElementById('lista'); l.innerHTML = ''; let t = 0;
+    const d = snap.val(); if(!d) return;
+    Object.keys(d).forEach(k => {
+        const p = d[k]; if(p.status === 'aguardando_pagamento') {
+            l.innerHTML += `<div class="card"><b>${p.mesa} - R$ ${p.total.toFixed(2)}</b><br><small>${p.cliente} | ${p.metodoPag}</small><button class="btn" style="background:#27ae60;width:100%" onclick="upd('${k}','novo')">Confirmar</button></div>`;
+        } else if(p.status !== 'cancelado') t += p.total;
     });
-
-    document.getElementById('t-pix').innerText = `R$ ${totais.pix.toFixed(2)}`;
-    document.getElementById('t-cartao').innerText = `R$ ${totais.cartao.toFixed(2)}`;
-    document.getElementById('t-dinheiro').innerText = `R$ ${totais.dinheiro.toFixed(2)}`;
-    document.getElementById('t-total').innerText = `R$ ${totais.total.toFixed(2)}`;
-    updCharts(hData);
+    document.getElementById('tot').innerText = "R$ " + t.toFixed(2);
 });
-
-function updCharts(hData){
-    if(!chartH){
-        chartH = new Chart(document.getElementById('c-hora'), {type:'line', data:{labels:Array.from({length:24},(_,i)=>i+'h'), datasets:[{label:'Vendas R$', data:hData, borderColor:'#d4a84b', tension:0.3}]}});
-        chartP = new Chart(document.getElementById('c-pizza'), {type:'doughnut', data:{labels:['Pix','Cartão','Dinheiro'], datasets:[{data:[totais.pix, totais.cartao, totais.dinheiro], backgroundColor:['#3498db','#9b59b6','#27ae60']}]}});
-    } else {
-        chartH.data.datasets[0].data = hData; chartH.update();
-        chartP.data.datasets[0].data = [totais.pix, totais.cartao, totais.dinheiro]; chartP.update();
-    }
-}
-
-onValue(ref(db, 'fechamentos'), (snap) => {
-    const d = snap.val(); let h = '';
-    if(d) Object.keys(d).reverse().forEach(k => {
-        const s = d[k]; h += `<div class="box" style="margin-bottom:10px;text-align:left"><b>${s.dia}</b> - Total: R$ ${s.total.toFixed(2)}</div>`;
-    });
-    document.getElementById('lista-h').innerHTML = h || 'Sem histórico.';
-});
-
 window.upd = (id, s) => update(ref(db, 'pedidos/'+id), {status: s});
-window.salvar = () => { push(ref(db, 'fechamentos'), { data: new Date().toISOString(), dia: new Date().toLocaleDateString(), ...totais }); alert("Guardado!"); };
-window.show = (id, el) => {
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
-    ['t-caixa','t-graficos','t-historico'].forEach(t=>document.getElementById(t).style.display='none');
-    document.getElementById(id).style.display='block';
-};
 </script>
 </body>
 </html>
