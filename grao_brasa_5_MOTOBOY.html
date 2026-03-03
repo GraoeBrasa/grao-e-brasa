@@ -1,40 +1,26 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Motoboy – Grão & Brasa</title>
+<meta charset="UTF-8"><title>Motoboy – Grão & Brasa</title>
 <style>
     body{font-family:sans-serif;background:#121212;color:white;padding:15px}
     .card{background:#1e1e1e;padding:20px;border-radius:15px;margin-bottom:15px;border-left:6px solid #3498db}
-    .btn{width:100%;padding:18px;border:none;border-radius:10px;font-weight:bold;font-size:1.1rem;margin-top:15px;color:white;background:#27ae60}
+    .btn{width:100%;padding:18px;border:none;border-radius:10px;font-weight:bold;color:white;background:#27ae60;cursor:pointer}
 </style>
 </head>
 <body>
-<h1 style="color:#d4a84b">🛵 Entregas Brasa</h1>
+<h1>🛵 Entregas Brasa</h1>
 <div id="lista"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-const db = getDatabase(initializeApp({databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com"}));
-
+const db = getDatabase(initializeApp({ databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" }));
 onValue(ref(db, 'pedidos'), (snap) => {
-    document.getElementById('lista').innerHTML = '';
+    const l = document.getElementById('lista'); l.innerHTML = '';
     const d = snap.val(); if(!d) return;
     Object.keys(d).forEach(k => {
-        const p = d[k];
-        if(p.mesa==='Delivery' && (p.status==='pronto'||p.status==='em_rota')){
-            document.getElementById('lista').innerHTML += `<div class="card" style="border-left-color:${p.status==='em_rota'?'#9b59b6':'#3498db'}">
-                <b style="font-size:1.3rem">📍 ${p.cliente}</b><br>
-                <p style="margin:10px 0;color:#aaa">${p.endereco}</p>
-                <div style="background:#000;padding:10px;border-radius:8px">
-                    <b>Total a Receber: R$ ${p.total.toFixed(2)}</b><br>
-                    <small>Obs: ${p.obs || 'Nenhuma'}</small>
-                </div>
-                <button class="btn" onclick="upd('${k}','${p.status==='pronto'?'em_rota':'finalizado'}')">
-                    ${p.status==='pronto'?'🏍️ INICIAR ENTREGA':'✅ CONFIRMAR ENTREGUE'}
-                </button>
-            </div>`;
+        const p = d[k]; if(p.mesa==='Delivery' && (p.status==='pronto'||p.status==='em_rota')){
+            l.innerHTML += `<div class="card"><b>📍 ${p.cliente}</b><br>${p.endereco}<br><b>R$ ${p.total.toFixed(2)}</b><button class="btn" onclick="upd('${k}','${p.status==='pronto'?'em_rota':'finalizado'}')">${p.status==='pronto'?'SAIR':'ENTREGUE'}</button></div>`;
         }
     });
 });
