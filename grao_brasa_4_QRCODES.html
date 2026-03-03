@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<title>QR Codes Grão & Brasa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+    body{font-family:serif;text-align:center;background:#f5ead6;color:#3d1f0d}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:30px;padding:40px}
+    .card{background:white; border:2px solid #c8843a; padding:20px; border-radius:15px}
+</style>
+</head>
+<body>
+    <h1 style="margin-top:30px">Gerador de QR Codes</h1>
+    <div class="grid" id="grid"></div>
+<script>
+    const URL_BASE = "https://gooddeadzone.github.io/grao-e-brasa/grao_brasa_1_CLIENTE.html";
+    for(let i=1; i<=12; i++){
+        const c = document.createElement('div'); c.className = 'card';
+        const url = URL_BASE + "?mesa=Mesa_" + i;
+        c.innerHTML = `<h3>Mesa ${i}</h3><div id="q${i}" style="display:flex;justify-content:center"></div><div style="font-size:0.6rem;margin-top:10px">${url}</div>`;
+        document.getElementById('grid').appendChild(c);
+        new QRCode(document.getElementById('q'+i), {text: url, width: 150, height: 150});
+    }
+</script>
+</body>
+</html>
