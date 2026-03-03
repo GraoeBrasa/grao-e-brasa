@@ -1,59 +1,31 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Grão & Brasa – Cozinha</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><title>Cozinha – Grão & Brasa</title>
 <style>
-:root{--bg:#111;--bg3:#242424;--dou:#d4a84b;--car:#c8843a;--vd:#27ae60;--am:#f39c12;--az:#3498db;--vm:#e74c3c;}
-body{font-family:'Lora',serif;background:var(--bg);color:#ddd;padding:20px}
-.header{display:flex;justify-content:space-between;border-bottom:1px solid #333;padding-bottom:15px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
-.card{background:var(--bg3);padding:18px;border-radius:12px;border-left:6px solid transparent}
-.card.novo{border-left-color:var(--am)}
-.card.preparando{border-left-color:var(--az)}
-.cobs{background:#111;padding:10px;border-radius:8px;color:var(--am);margin-top:10px;font-size:0.9rem;border:1px dashed #444}
-.badge-del{background:var(--vm);color:white;padding:4px 8px;border-radius:5px;font-size:0.7rem;font-weight:bold}
-.btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;margin-top:15px;color:white}
+    body{font-family:sans-serif;background:#111;color:#eee;padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+    .card{background:#222;padding:20px;border-radius:15px;border-left:8px solid #f39c12}
+    .btn{width:100%;padding:15px;border:none;border-radius:10px;font-weight:bold;margin-top:15px;cursor:pointer;color:white}
 </style>
 </head>
 <body>
-<div class="header"><h1 style="font-family:'Playfair Display';color:var(--dou)">Painel Cozinha</h1><div id="clock" style="font-size:1.5rem;font-weight:bold">00:00:00</div></div>
+<h1>👨‍🍳 Cozinha Brasa</h1>
 <div class="grid" id="grid"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-const db = getDatabase(initializeApp({databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com"}));
-
-function getT(iso){
-    const d = Math.floor((new Date() - new Date(iso))/1000);
-    return `${Math.floor(d/60)}:${(d%60).toString().padStart(2,'0')}`;
-}
-
+const db = getDatabase(initializeApp({ databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" }));
 onValue(ref(db, 'pedidos'), (snap) => {
-    const grid = document.getElementById('grid'); grid.innerHTML = '';
-    const dados = snap.val(); if(!dados) return;
-    Object.keys(dados).forEach(k => {
-        const p = dados[k];
-        if(p.status==='novo'||p.status==='preparando'){
-            grid.innerHTML += `<div class="card ${p.status}">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                    <div style="font-family:'Playfair Display';font-size:1.3rem;color:var(--dou)">
-                        ${p.mesa.replace('_',' ')}<br>
-                        ${p.mesa==='Delivery'?'<span class="badge-del">🛵 DELIVERY</span>':''}
-                    </div>
-                    <div style="font-size:0.8rem;color:#888">${new Date(p.hora).toLocaleTimeString()}</div>
-                </div>
-                <div style="margin:15px 0;font-size:1.1rem">${p.itens.map(i=>`<div>• ${i.nome}</div>`).join('')}</div>
-                ${p.obs?`<div class="cobs">📝 NOTA: ${p.obs}</div>`:''}
-                <div style="margin-top:10px;font-weight:bold;color:var(--car);font-size:1.2rem">⏱ ESPERA: ${getT(p.hora)}</div>
-                <button class="btn" style="background:${p.status==='novo'?'var(--car)':'var(--vd)'}" onclick="upd('${k}','${p.status==='novo'?'preparando':'pronto'}')">${p.status==='novo'?'🔥 INICIAR':'✅ PRONTO'}</button>
-            </div>`;
+    const g = document.getElementById('grid'); g.innerHTML = '';
+    const d = snap.val(); if(!d) return;
+    Object.keys(d).forEach(k => {
+        const p = d[k]; if(p.status==='novo'||p.status==='preparando'){
+            g.innerHTML += `<div class="card" style="border-color:${p.status==='novo'?'#f39c12':'#3498db'}"><b>${p.mesa}</b><div style="margin:10px 0">${p.itens.map(i=>`• ${i.nome}<br>`).join('')}</div><small>${p.obs||''}</small><button class="btn" style="background:${p.status==='novo'?'#c8843a':'#27ae60'}" onclick="upd('${k}','${p.status==='novo'?'preparando':'pronto'}')">${p.status==='novo'?'INICIAR':'PRONTO'}</button></div>`;
         }
     });
 });
 window.upd = (id, s) => update(ref(db, 'pedidos/'+id), {status: s});
-setInterval(()=>document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 </script>
 </body>
 </html>
