@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestão Grão & Brasa – Admin</title>
+<title>Gestão Grão & Brasa – Painel Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lora:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -20,7 +20,7 @@
     .content.active { display: block; }
 
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--brd); text-align: center; position: relative; }
+    .stat-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--brd); text-align: center; }
     .stat-card h4 { font-size: 0.7rem; color: #888; margin-bottom: 8px; text-transform: uppercase; }
     .stat-card h2 { font-size: 1.5rem; color: var(--txt); }
     
@@ -30,6 +30,7 @@
     .btn-vm { background: var(--vm); }
     .btn-dou { background: none; border: 1px solid var(--dou); color: var(--dou); }
 
+    .order-item { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid var(--az); display: flex; justify-content: space-between; align-items: center; }
     .hist-item { padding: 15px; border-bottom: 1px solid var(--brd); display: flex; justify-content: space-between; align-items: center; }
     .lucro-badge { font-size: 0.7rem; background: rgba(39, 174, 96, 0.1); color: var(--vd); padding: 3px 8px; border-radius: 5px; margin-top: 5px; display: inline-block; }
 
@@ -40,7 +41,7 @@
 
 <div class="topbar no-print">
     <div style="font-family:'Playfair Display'; font-size:1.5rem; color:var(--dou)">Grão & Brasa <span style="font-size: 0.8rem; opacity: 0.6">| ADMIN</span></div>
-    <div id="status-loja" style="font-weight: bold; padding: 5px 15px; border-radius: 20px;">--</div>
+    <div id="status-loja" style="font-weight: bold; padding: 5px 15px; border-radius: 20px;">CARREGANDO...</div>
 </div>
 
 <div class="tabs no-print">
@@ -53,25 +54,33 @@
 <div id="t-caixa" class="content active">
     <div class="stats-grid">
         <div class="stat-card"><h4>Vendas PIX</h4><h2 id="val-pix">R$ 0,00</h2></div>
-        <div class="stat-card"><h4>Cartão/Din</h4><h2 id="val-outros">R$ 0,00</h2></div>
-        <div class="stat-card" style="border-color: var(--dou)"><h4>Total Bruto</h4><h2 id="val-total" style="color: var(--dou)">R$ 0,00</h2></div>
-        <div class="stat-card" style="border-color: var(--vd)"><h4>Lucro Estimado (25%)</h4><h2 id="val-lucro" style="color: var(--vd)">R$ 0,00</h2></div>
+        <div class="stat-card"><h4>Outros</h4><h2 id="val-outros">R$ 0,00</h2></div>
+        <div class="stat-card" style="border-color: var(--dou)"><h4>Faturamento</h4><h2 id="val-total" style="color: var(--dou)">R$ 0,00</h2></div>
+        <div class="stat-card" style="border-color: var(--vd)"><h4>Lucro Est. (25%)</h4><h2 id="val-lucro" style="color: var(--vd)">R$ 0,00</h2></div>
     </div>
-    
     <div class="box no-print" style="text-align: center;">
         <button class="btn btn-vd" onclick="toggleCaixa(true)">🔓 ABRIR TURNO</button>
         <button class="btn btn-vm" onclick="confirmarFechamento()">🔒 FECHAR TURNO</button>
     </div>
 </div>
 
+<div id="t-pedidos" class="content">
+    <div class="box"><h3>💳 Pagamentos Pendentes</h3><div id="lista-pendentes"></div></div>
+    <div class="box"><h3>🔥 Em Andamento</h3><div id="lista-ativos"></div></div>
+</div>
+
+<div id="t-graficos" class="content">
+    <div class="stats-grid">
+        <div class="box" style="grid-column: span 2;"><h4>Faturamento por Hora</h4><div style="height:300px"><canvas id="chartVendas"></canvas></div></div>
+        <div class="box"><h4>Pagamentos</h4><div style="height:300px"><canvas id="chartPagamento"></canvas></div></div>
+    </div>
+</div>
+
 <div id="t-hist" class="content">
     <div class="box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-family: 'Playfair Display'">Fechamentos Consolidados</h3>
-            <div class="no-print">
-                <button class="btn btn-dou" onclick="exportarCSV()">📊 EXPORTAR CSV</button>
-                <button class="btn btn-dou" onclick="window.print()">🖨️ PDF</button>
-            </div>
+            <h3>Relatórios Mensais</h3>
+            <div class="no-print"><button class="btn btn-dou" onclick="exportarCSV()">📊 EXCEL</button><button class="btn btn-dou" onclick="window.print()">🖨️ PDF</button></div>
         </div>
         <div id="lista-historico"></div>
     </div>
@@ -81,84 +90,97 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, onValue, update, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-const db = getDatabase(initializeApp({ databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" }));
+// CONFIGURAÇÃO UNIFICADA (DEVE SER IGUAL NO CARDÁPIO)
+const firebaseConfig = { databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-// CONFIGURAÇÃO DE NEGÓCIO
-const MARGEM_LUCRO = 0.25; // 25%
-
+const MARGEM = 0.25;
 let stats = { total: 0, Pix: 0, outros: 0 };
 let caixaStatus = { aberto: false, inicio: null };
+let chartV, chartP;
 
 window.openTab = (tabId, btn) => {
     document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     btn.classList.add('active');
+    if(tabId === 't-graficos') initCharts();
 };
 
-// CÁLCULO DE LUCRO
-const calcLucro = (v) => v * MARGEM_LUCRO;
-
-// EXPORTAÇÃO CSV COM LUCRO
-window.exportarCSV = () => {
-    onValue(ref(db, 'fechamentos'), (snap) => {
-        const dados = snap.val();
-        if(!dados) return alert("Sem dados.");
-        let csv = "Data;Faturamento Bruto;Lucro Estimado (25%)\n";
-        Object.values(dados).reverse().forEach(f => {
-            csv += `${new Date(f.data).toLocaleDateString()};${f.total.toFixed(2)};${calcLucro(f.total).toFixed(2)}\n`;
-        });
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `financeiro_grao_brasa.csv`;
-        link.click();
-    }, { onlyOnce: true });
-};
-
-onValue(ref(db, 'configuracoes/caixa'), s => { caixaStatus = s.val() || {aberto:false}; document.getElementById('status-loja').innerText = caixaStatus.aberto ? "🟢 ABERTO" : "🔴 FECHADO"; });
-
-onValue(ref(db, 'pedidos'), snap => {
-    const dados = snap.val();
-    stats = { total: 0, Pix: 0, outros: 0 };
-    if(dados) Object.values(dados).forEach(p => {
-        if(caixaStatus.inicio && p.hora >= caixaStatus.inicio && p.status !== 'cancelado' && p.status !== 'aguardando_pagamento') {
-            stats.total += p.total;
-            if(p.metodoPag === 'Pix') stats.Pix += p.total; else stats.outros += p.total;
-        }
-    });
-    document.getElementById('val-pix').innerText = "R$ " + stats.Pix.toFixed(2);
-    document.getElementById('val-outros').innerText = "R$ " + stats.outros.toFixed(2);
-    document.getElementById('val-total').innerText = "R$ " + stats.total.toFixed(2);
-    document.getElementById('val-lucro').innerText = "R$ " + calcLucro(stats.total).toFixed(2);
+// SINCRONIZAÇÃO DE STATUS
+onValue(ref(db, 'configuracoes/caixa'), s => {
+    caixaStatus = s.val() || {aberto:false};
+    document.getElementById('status-loja').innerText = caixaStatus.aberto ? "🟢 ABERTO" : "🔴 FECHADO";
 });
 
+// ESCUTA DE PEDIDOS EM TEMPO REAL
+onValue(ref(db, 'pedidos'), snap => {
+    const dados = snap.val();
+    const pendArea = document.getElementById('lista-pendentes');
+    const ativosArea = document.getElementById('lista-ativos');
+    pendArea.innerHTML = ""; ativosArea.innerHTML = "";
+    stats = { total: 0, Pix: 0, outros: 0 };
+    let hourlyData = Array(24).fill(0);
+
+    if(dados) {
+        Object.keys(dados).forEach(key => {
+            const p = dados[key];
+            // Filtra pedidos apenas do turno atual
+            const isTurno = caixaStatus.inicio && p.hora >= caixaStatus.inicio;
+
+            if(p.status === 'aguardando_pagamento') {
+                pendArea.innerHTML += `<div class="order-item" style="border-left-color:var(--vm)"><div><b>${p.mesa}</b> - R$ ${p.total.toFixed(2)}<br><small>${p.cliente} | ${p.metodoPag}</small></div><button class="btn btn-vd" onclick="mudar('${key}','novo')">PAGO</button></div>`;
+            } else if(['novo', 'preparando', 'pronto', 'em_rota'].includes(p.status)) {
+                ativosArea.innerHTML += `<div class="order-item"><div><b>${p.mesa}</b> - ${p.cliente}</div><button class="btn btn-az" onclick="mudar('${key}','finalizado')">FINALIZAR</button></div>`;
+            }
+
+            if(isTurno && p.status !== 'cancelado' && p.status !== 'aguardando_pagamento') {
+                stats.total += p.total;
+                if(p.metodoPag === 'Pix') stats.Pix += p.total; else stats.outros += p.total;
+                hourlyData[new Date(p.hora).getHours()] += p.total;
+            }
+        });
+    }
+    document.getElementById('val-total').innerText = "R$ " + stats.total.toFixed(2);
+    document.getElementById('val-lucro').innerText = "R$ " + (stats.total * MARGEM).toFixed(2);
+    document.getElementById('val-pix').innerText = "R$ " + stats.Pix.toFixed(2);
+    document.getElementById('val-outros').innerText = "R$ " + stats.outros.toFixed(2);
+    if(chartV) updateCharts(hourlyData);
+});
+
+window.mudar = (id, st) => update(ref(db, 'pedidos/'+id), { status: st });
+window.toggleCaixa = (v) => set(ref(db, 'configuracoes/caixa'), { aberto: v, inicio: v ? new Date().toISOString() : null });
+window.confirmarFechamento = () => { if(confirm("Fechar turno?")) { push(ref(db, 'fechamentos'), { data: new Date().toISOString(), total: stats.total }); toggleCaixa(false); } };
+
+// HISTÓRICO E EXPORTAÇÃO
 onValue(ref(db, 'fechamentos'), snap => {
     const list = document.getElementById('lista-historico'); list.innerHTML = "";
     const dados = snap.val();
     if(dados) Object.keys(dados).reverse().forEach(key => {
         const f = dados[key];
-        list.innerHTML += `
-            <div class="hist-item">
-                <div>
-                    <span>📅 ${new Date(f.data).toLocaleDateString()}</span><br>
-                    <b>Faturamento: R$ ${f.total.toFixed(2)}</b><br>
-                    <span class="lucro-badge">Lucro Est: R$ ${calcLucro(f.total).toFixed(2)}</span>
-                </div>
-                <div class="no-print">
-                    <button class="btn btn-dou" style="font-size:0.7rem" onclick="editHist('${key}', ${f.total})">Editar</button>
-                </div>
-            </div>`;
+        list.innerHTML += `<div class="hist-item"><span>📅 ${new Date(f.data).toLocaleDateString()} - <b>R$ ${f.total.toFixed(2)}</b> (Lucro: R$ ${(f.total*MARGEM).toFixed(2)})</span><div class="no-print"><button class="btn btn-dou" onclick="edit('${key}',${f.total})">Editar</button></div></div>`;
     });
 });
 
-window.editHist = (id, old) => {
-    const v = prompt("Ajustar faturamento bruto:", old);
-    if(v !== null) update(ref(db, 'fechamentos/'+id), { total: parseFloat(v) });
+window.edit = (id, old) => { const v = prompt("Novo valor:", old); if(v) update(ref(db, 'fechamentos/'+id), { total: parseFloat(v) }); };
+
+window.exportarCSV = () => {
+    onValue(ref(db, 'fechamentos'), snap => {
+        let csv = "\ufeffData;Total;Lucro\n";
+        Object.values(snap.val()).forEach(f => csv += `${new Date(f.data).toLocaleDateString()};${f.total.toFixed(2)};${(f.total*MARGEM).toFixed(2)}\n`);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "relatorio_brasa.csv"; link.click();
+    }, { onlyOnce: true });
 };
-window.toggleCaixa = (v) => set(ref(db, 'configuracoes/caixa'), { aberto: v, inicio: v ? new Date().toISOString() : null });
-window.confirmarFechamento = () => { push(ref(db, 'fechamentos'), { data: new Date().toISOString(), total: stats.total }); toggleCaixa(false); };
+
+// GRÁFICOS
+function initCharts() {
+    if(chartV) { chartV.destroy(); chartP.destroy(); }
+    chartV = new Chart(document.getElementById('chartVendas').getContext('2d'), { type: 'line', data: { labels: Array.from({length: 24}, (_, i) => i + "h"), datasets: [{ label: 'R$', data: [], borderColor: '#c8843a', tension: 0.3, fill: true, backgroundColor: 'rgba(200, 132, 58, 0.1)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+    chartP = new Chart(document.getElementById('chartPagamento').getContext('2d'), { type: 'doughnut', data: { labels: ['Pix', 'Outros'], datasets: [{ data: [0,0], backgroundColor: ['#3498db', '#27ae60'], borderWeight: 0 }] }, options: { responsive: true, maintainAspectRatio: false } });
+}
+function updateCharts(h) { chartV.data.datasets[0].data = h; chartP.data.datasets[0].data = [stats.Pix, stats.outros]; chartV.update(); chartP.update(); }
 </script>
 </body>
 </html>
