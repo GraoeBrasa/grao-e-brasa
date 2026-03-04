@@ -22,7 +22,7 @@ body{font-family:'Lora',serif;background:var(--cr);color:var(--m);min-height:100
 .item-desc{font-size:0.75rem;color:#666;line-height:1.3;margin-bottom:5px;display:block}
 .item-price{color:var(--car);font-weight:bold;font-size:1rem}
 .btn-add{background:var(--m);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:bold;cursor:pointer}
-.status-bar{margin:15px;padding:15px;border-radius:12px;text-align:center;color:white;font-weight:bold;font-size:0.85rem}
+.status-bar{margin:15px;padding:18px;border-radius:15px;text-align:center;color:white;font-weight:bold;font-size:0.9rem}
 .pix-box{background:white;padding:20px;border-radius:15px;margin-bottom:15px;border:2px solid var(--dou);text-align:center}
 .f-bar{position:fixed;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(to top, var(--cr) 90%, transparent);z-index:150}
 .btn-main{background:var(--m);color:var(--dou);border:none;padding:18px;width:100%;border-radius:16px;font-family:'Playfair Display',serif;font-weight:900;font-size:1.1rem;display:flex;justify-content:space-between}
@@ -34,15 +34,14 @@ label { font-size: 0.85rem; font-weight: bold; margin-top: 15px; display: block}
 
 <div id="s-loading" class="screen active" style="background:var(--m);color:var(--dou);align-items:center;justify-content:center;text-align:center">
   <h1 style="font-family:'Playfair Display';font-size:2.5rem">Grão & Brasa</h1>
-  <p style="letter-spacing:3px;font-size:.7rem;margin-top:10px;opacity:.7">CARREGANDO CARDÁPIO...</p>
+  <p style="letter-spacing:3px;font-size:.7rem;margin-top:10px;opacity:.7">CONECTANDO...</p>
 </div>
 
 <div id="s-login" class="screen" style="background:var(--m);align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--cr);padding:40px 30px;border-radius:24px;text-align:center;width:100%;max-width:360px">
     <h2 style="font-family:'Playfair Display';margin-bottom:10px">Seja Bem-vindo</h2>
     <input type="text" id="in-name" placeholder="Seu nome">
-    <button onclick="doLogin()" style="width:100%;padding:18px;background:var(--m);color:var(--dou);border:none;border-radius:12px;font-weight:700;margin-top:20px;cursor:pointer">Ver Cardápio</button>
-    <div style="font-size:0.6rem;opacity:0.5;margin-top:15px">CNPJ: 64.998.762/0001-01</div>
+    <button onclick="doLogin()" style="width:100%;padding:18px;background:var(--m);color:var(--dou);border:none;border-radius:12px;font-weight:700;margin-top:20px;cursor:pointer">Entrar</button>
   </div>
 </div>
 
@@ -52,30 +51,34 @@ label { font-size: 0.85rem; font-weight: bold; margin-top: 15px; display: block}
     <div id="mesa-label" style="color:white;font-size:.7rem;background:var(--car);padding:4px 10px;border-radius:8px">Mesa --</div>
   </div>
 
-  <div style="display:flex;background:var(--m);margin:15px;border-radius:12px;overflow:hidden;border:1px solid var(--car)">
+  <div class="delivery-tabs">
     <button class="tab-btn active" id="btn-local" onclick="toggleTipo('local')">No Restaurante</button>
     <button class="tab-btn" id="btn-delivery" onclick="toggleTipo('delivery')">Delivery</button>
   </div>
 
   <div class="menu-body">
     <div id="status-box" class="status-bar" style="display:none"></div>
+    
     <div id="pix-area" class="pix-box" style="display:none">
         <h3 style="font-family:'Playfair Display'">Pagar via PIX</h3>
         <p style="font-size:0.85rem;margin:10px 0">Chave CNPJ: <br><b style="font-size:1.1rem">64.998.762/0001-01</b></p>
         <button onclick="copyPix()" style="background:var(--m);color:var(--dou);border:none;padding:12px;border-radius:10px;font-weight:bold;cursor:pointer;width:100%">Copiar Chave</button>
     </div>
+
     <div id="form-delivery" style="display:none; background:white; padding:15px; border-radius:15px; margin-bottom:15px; border:1px solid var(--car)">
-        <h4 style="font-family:'Playfair Display'">Endereço</h4>
-        <input type="text" id="del-end" placeholder="Rua, Número e Bairro">
+        <h4 style="font-family:'Playfair Display'">Endereço de Entrega</h4>
+        <input type="text" id="del-end" placeholder="Rua, Número, Bairro">
     </div>
+
     <div id="menu-container"></div>
+
     <div style="background:white;padding:15px;border-radius:15px;margin-top:20px;border:1px solid #ddd">
-        <label>📝 Observações:</label>
-        <textarea id="obs" placeholder="Ex: Carne de porco, sem cebola..."></textarea>
-        <label>💳 Pagamento:</label>
+        <label>📝 Alguma Observação?</label>
+        <textarea id="obs" placeholder="Ex: Sem cebola, carne bem passada..."></textarea>
+        <label>💳 Forma de Pagamento:</label>
         <select id="sel-pag">
             <option value="Pix">PIX (Chave CNPJ)</option>
-            <option value="Cartao">Cartão</option>
+            <option value="Cartao">Cartão (Levamos maquininha)</option>
             <option value="Dinheiro">Dinheiro</option>
         </select>
     </div>
@@ -83,11 +86,11 @@ label { font-size: 0.85rem; font-weight: bold; margin-top: 15px; display: block}
 
   <div class="f-bar">
     <div id="resumo" style="display:none;width:100%;margin-bottom:10px;padding:0 10px;font-size:0.8rem">
-        <div style="display:flex;justify-content:space-between"><span>Itens:</span> <span id="txt-sub">R$ 0,00</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Subtotal:</span> <span id="txt-sub">R$ 0,00</span></div>
         <div id="taxa-linha" style="display:none;justify-content:space-between;color:var(--vm)"><span>Taxa Delivery:</span> <span>R$ 7,00</span></div>
     </div>
     <button class="btn-main" id="btn-finalizar" onclick="finalizar()">
-      <span>Confirmar Pedido</span>
+      <span>Finalizar Pedido</span>
       <span id="txt-total">R$ 0,00</span>
     </button>
   </div>
@@ -97,78 +100,129 @@ label { font-size: 0.85rem; font-weight: bold; margin-top: 15px; display: block}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-const db = getDatabase(initializeApp({ databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" }));
-const TAXA = 7.00; let cart = []; let subtotal = 0; let tipoPedido = 'local';
-const mesa = new URLSearchParams(window.location.search).get('mesa') || 'Mesa_Balcao';
+const firebaseConfig = { databaseURL: "https://grao-e-brasa-ef12e-default-rtdb.firebaseio.com" };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const TAXA = 7.00;
+let cart = []; let subtotal = 0; let tipoPedido = 'local';
+const mesaParam = new URLSearchParams(window.location.search).get('mesa') || 'Mesa_Balcao';
 
 const produtos = [
     {n:"PF Simples", p:20.00, d:"1 carne do dia + guarnições mineiras.", c:"Pratos"},
     {n:"PF Completo", p:28.00, d:"2 carnes do dia + guarnições mineiras.", c:"Pratos"},
-    {n:"Pudim de Leite", p:8.00, d:"Tradicional e cremoso.", c:"Doces"},
-    {n:"Doce de Leite c/ Queijo", p:9.00, d:"Clássico mineiro.", c:"Doces"},
+    {n:"Pudim de Leite", p:8.00, d:"Cremoso com calda artesanal.", c:"Doces"},
+    {n:"Doce de Leite c/ Queijo", p:9.00, d:"O clássico de Minas.", c:"Doces"},
     {n:"Limonada Suíça", p:10.00, d:"Com leite condensado.", c:"Bebidas"},
-    {n:"Vitamina 400ml", p:9.00, d:"Saborosa e gelada.", c:"Bebidas"},
-    {n:"Suco Natural", p:7.00, d:"Frutas selecionadas.", c:"Bebidas"},
+    {n:"Vitamina 400ml", p:9.00, d:"Batida com frutas frescas.", c:"Bebidas"},
+    {n:"Suco Natural", p:7.00, d:"Laranja, limão ou maracujá.", c:"Bebidas"},
     {n:"Refrigerante Lata", p:5.00, d:"Gelado na hora.", c:"Bebidas"},
-    {n:"Café Coado", p:4.00, d:"No bule mineiro.", c:"Bebidas"},
     {n:"Água Mineral", p:3.00, d:"Com ou sem gás.", c:"Bebidas"}
 ];
 
 window.doLogin = () => {
-    if(!document.getElementById('in-name').value) return alert("Diga seu nome!");
+    if(!document.getElementById('in-name').value) return alert("Por favor, informe seu nome!");
     showScreen('s-menu');
-    document.getElementById('mesa-label').innerText = "Mesa: " + (mesa.includes('_') ? mesa.split('_')[1] : mesa);
+    document.getElementById('mesa-label').innerText = "Mesa: " + (mesaParam.includes('_') ? mesaParam.split('_')[1] : mesaParam);
     renderMenu();
 };
 
 function renderMenu() {
-    let h = ""; ["Pratos", "Doces", "Bebidas"].forEach(cat => {
-        h += `<div style="font-family:'Playfair Display';font-size:1.4rem;margin:25px 0 10px;border-bottom:2px solid var(--car);display:inline-block">${cat}</div>`;
+    let html = "";
+    ["Pratos", "Doces", "Bebidas"].forEach(cat => {
+        html += `<div style="font-family:'Playfair Display';font-size:1.4rem;margin:25px 0 10px;border-bottom:2px solid var(--car);display:inline-block">${cat}</div>`;
         produtos.filter(p => p.c === cat).forEach(it => {
-            h += `<div class="item-card"><div class="item-info"><div class="item-name">${it.n}</div><span class="item-desc">${it.d}</span><span class="item-price">R$ ${it.p.toFixed(2)}</span></div><button class="btn-add" onclick="add('${it.n}', ${it.p})">+</button></div>`;
+            html += `<div class="item-card"><div class="item-info"><div class="item-name">${it.n}</div><span class="item-desc">${it.d}</span><span class="item-price">R$ ${it.p.toFixed(2)}</span></div><button class="btn-add" onclick="add('${it.n}', ${it.p})">+</button></div>`;
         });
     });
-    document.getElementById('menu-container').innerHTML = h;
+    document.getElementById('menu-container').innerHTML = html;
 }
 
 window.add = (n, p) => { cart.push({nome: n, preco: p}); subtotal += p; updTotal(); };
-window.toggleTipo = (t) => { 
-    tipoPedido = t; document.getElementById('form-delivery').style.display = t === 'delivery' ? 'block' : 'none';
-    document.getElementById('btn-local').classList.toggle('active', t === 'local');
-    document.getElementById('btn-delivery').classList.toggle('active', t === 'delivery');
-    updTotal(); 
+
+window.toggleTipo = (t) => {
+    tipoPedido = t;
+    const isDel = t === 'delivery';
+    document.getElementById('btn-local').classList.toggle('active', !isDel);
+    document.getElementById('btn-delivery').classList.toggle('active', isDel);
+    document.getElementById('form-delivery').style.display = isDel ? 'block' : 'none';
+    updTotal();
 };
 
 function updTotal() {
     let final = (tipoPedido === 'delivery') ? (subtotal + TAXA) : subtotal;
     document.getElementById('resumo').style.display = subtotal > 0 ? 'block' : 'none';
+    document.getElementById('txt-sub').innerText = "R$ " + subtotal.toFixed(2).replace('.',',');
     document.getElementById('taxa-linha').style.display = (tipoPedido === 'delivery' && subtotal > 0) ? 'flex' : 'none';
     document.getElementById('txt-total').innerText = "R$ " + final.toFixed(2).replace('.',',');
 }
 
 window.finalizar = async () => {
-    if(cart.length === 0) return alert("Carrinho vazio!");
+    if(cart.length === 0) return alert("Escolha pelo menos um item!");
     const met = document.getElementById('sel-pag').value;
-    const pRef = push(ref(db, 'pedidos'));
-    await set(pRef, { cliente: document.getElementById('in-name').value, mesa: tipoPedido==='delivery'?'Delivery':mesa, itens: cart, total: (tipoPedido==='delivery'?subtotal+TAXA:subtotal), status: 'aguardando_pagamento', metodoPag: met, hora: new Date().toISOString(), endereco: document.getElementById('del-end').value || '' });
-    if(met === 'Pix') document.getElementById('pix-area').style.display='block';
-    localStorage.setItem('gb_last_id', pRef.key); cart = []; subtotal = 0; updTotal(); rastrear();
+    const end = document.getElementById('del-end').value;
+    if(tipoPedido === 'delivery' && !end) return alert("Por favor, informe o endereço de entrega!");
+    
+    const finalTotal = (tipoPedido === 'delivery') ? (subtotal + TAXA) : subtotal;
+
+    try {
+        const pRef = push(ref(db, 'pedidos'));
+        await set(pRef, {
+            cliente: document.getElementById('in-name').value,
+            mesa: tipoPedido === 'delivery' ? 'Delivery' : mesaParam,
+            itens: cart,
+            total: finalTotal,
+            status: 'aguardando_pagamento',
+            metodoPag: met,
+            obs: document.getElementById('obs').value,
+            endereco: end || '',
+            hora: new Date().toISOString()
+        });
+        
+        if(met === 'Pix') document.getElementById('pix-area').style.display = 'block';
+        alert("Pedido enviado! Acompanhe o status no topo da tela.");
+        localStorage.setItem('gb_last_id', pRef.key);
+        cart = []; subtotal = 0; updTotal();
+        rastrear();
+    } catch(e) { alert("Erro ao conectar. Verifique sua internet."); }
 };
 
 function rastrear() {
-    const id = localStorage.getItem('gb_last_id'); if(!id) return;
-    onValue(ref(db, 'pedidos/' + id), (snap) => {
+    const lastId = localStorage.getItem('gb_last_id');
+    if(!lastId) return;
+    onValue(ref(db, 'pedidos/' + lastId), (snap) => {
         const p = snap.val(); if(!p) return;
-        const box = document.getElementById('status-box'); box.style.display = 'block';
-        const cores = { aguardando_pagamento:'#e74c3c', novo:'#f39c12', preparando:'#3498db', pronto:'#27ae60', em_rota:'#9b59b6', finalizado:'#2ecc71' };
-        box.style.background = cores[p.status]; box.innerText = "PEDIDO: " + p.status.toUpperCase().replace('_',' ');
-        if(p.status !== 'aguardando_pagamento') document.getElementById('pix-area').style.display='none';
+        const box = document.getElementById('status-box');
+        box.style.display = 'block';
+        const statusMap = {
+            'aguardando_pagamento': {c: '#e74c3c', t: '⏳ AGUARDANDO PAGAMENTO'},
+            'novo': {c: '#f39c12', t: '✅ PAGO / NA COZINHA'},
+            'preparando': {c: '#3498db', t: '🔥 NO FOGO!'},
+            'pronto': {c: '#27ae60', t: '🍽️ PRONTO!'},
+            'em_rota': {c: '#9b59b6', t: '🛵 SAIU PARA ENTREGA'},
+            'finalizado': {c: '#2ecc71', t: '🤎 BOM APETITE!'}
+        };
+        const st = statusMap[p.status] || {c:'#333', t: p.status.toUpperCase()};
+        box.style.background = st.c;
+        box.innerText = st.t;
+        if(p.status !== 'aguardando_pagamento') document.getElementById('pix-area').style.display = 'none';
     });
 }
-function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
 window.copyPix = () => { navigator.clipboard.writeText("64.998.762/0001-01"); alert("CNPJ Copiado!"); };
-onValue(ref(db, 'configuracoes/caixa'), (snap) => { if(!snap.val()?.aberto) { document.getElementById('btn-finalizar').disabled = true; } });
-setTimeout(() => { if(document.getElementById('s-loading').classList.contains('active')) showScreen('s-login'); }, 3000);
+
+// FAIL-SAFE PARA O LOADING
+setTimeout(() => {
+    if(document.getElementById('s-loading').classList.contains('active')) {
+        showScreen('s-login');
+        rastrear();
+    }
+}, 2500);
 </script>
 </body>
 </html>
